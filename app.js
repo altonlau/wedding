@@ -126,12 +126,7 @@ function takePhoto() {
 function startRecording() {
   recordedChunks = [];
 
-  const candidates = [
-    "video/mp4;codecs=h264,aac",
-    "video/webm;codecs=vp9,opus",
-    "video/webm;codecs=vp8,opus",
-    "video/webm",
-  ];
+  const candidates = ["video/mp4"];
   const mimeType =
     candidates.find((c) => MediaRecorder.isTypeSupported(c)) || "";
 
@@ -141,6 +136,18 @@ function startRecording() {
       : new MediaRecorder(stream);
   } catch {
     mediaRecorder = new MediaRecorder(stream);
+  }
+
+  // If the selected/actual MIME isn't MP4, abort — backend conversion is expensive.
+  const actualMime = mediaRecorder.mimeType || mimeType || "";
+  if (!actualMime.startsWith("video/mp4")) {
+    showToast(
+      "Cannot record video. Try using a different browser.",
+      "error",
+      6000,
+    );
+    mediaRecorder = null;
+    return;
   }
 
   mediaRecorder.ondataavailable = (e) => {
