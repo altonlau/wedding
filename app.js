@@ -5,6 +5,7 @@
 // ── ✏️  CONFIG — update BACKEND_URL after deploying to Railway ─────────────────
 const BACKEND_URL = "https://wedding-production-bc01.up.railway.app"; // ← paste your Railway URL here
 const EVENT_NAME = "Abie & Alton's Wedding";
+const FILE_NAME = "wedding";
 const UNLOCK_AT = 5; // shots needed to unlock the album view
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -243,7 +244,7 @@ async function saveToDrive() {
             : "webm";
 
   const filename =
-    EVENT_NAME.replace(/[^a-zA-Z0-9]/g, "_") + "_" + ts + "." + ext;
+    FILE_NAME.replace(/[^a-zA-Z0-9]/g, "_") + "_" + ts + "." + ext;
 
   try {
     setProgress(15);
