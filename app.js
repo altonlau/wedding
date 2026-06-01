@@ -2,12 +2,11 @@
    DISPOSABLE CAMERA — App Logic
 ───────────────────────────────────────────────────────────────────────────── */
 
-// ── ✏️  CONFIG — update BACKEND_URL after deploying to Railway ─────────────────
-const BACKEND_URL = "https://wedding-mjvd.onrender.com"; // ← paste your Railway URL here
+// ── Config ────────────────────────────────────────────────────────────────────
+const BACKEND_URL = "https://wedding-mjvd.onrender.com";
 const EVENT_NAME = "Abie & Alton's Wedding";
 const FILE_NAME = "wedding";
-const UNLOCK_AT = 5; // shots needed to unlock the album view
-// ─────────────────────────────────────────────────────────────────────────────
+const UNLOCK_AT = 5;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let stream = null;
@@ -33,7 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
   fetchAlbumUrl();
 });
 
-// ── Screen navigation ─────────────────────────────────────────────────────────
+// ── Screens ───────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => {
     s.classList.toggle("active", s.id === id);
@@ -46,7 +45,7 @@ function applyEventName() {
   document.getElementById("album-card-title").textContent = EVENT_NAME;
 }
 
-// ── Album URL (fetched from backend on load) ──────────────────────────────────
+// ── Album URL ─────────────────────────────────────────────────────────────────
 function fetchAlbumUrl() {
   fetch(`${BACKEND_URL}/album`)
     .then((r) => r.json())
@@ -106,7 +105,6 @@ function takePhoto() {
   canvas.height = video.videoHeight;
   canvas.getContext("2d").drawImage(video, 0, 0);
 
-  // Flash effect
   const flash = document.getElementById("flash");
   flash.classList.remove("go");
   void flash.offsetWidth;
@@ -123,40 +121,40 @@ function takePhoto() {
   );
 }
 
+function pickMimeType() {
+  // Prefer mp4 (no server conversion needed), fall back to webm
+  const candidates = [
+    "video/mp4;codecs=h264,aac",
+    "video/mp4",
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+  ];
+  return candidates.find((c) => MediaRecorder.isTypeSupported(c)) || "";
+}
+
 function startRecording() {
   recordedChunks = [];
+  const mimeType = pickMimeType();
 
-  const candidates = ["video/mp4"];
-  const mimeType =
-    candidates.find((c) => MediaRecorder.isTypeSupported(c)) || "";
+  if (!mimeType) {
+    showToast("Video recording not supported on this browser.", "error", 5000);
+    return;
+  }
 
   try {
-    mediaRecorder = mimeType
-      ? new MediaRecorder(stream, { mimeType })
-      : new MediaRecorder(stream);
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
   } catch {
     mediaRecorder = new MediaRecorder(stream);
   }
 
-  // If the selected/actual MIME isn't MP4, abort — backend conversion is expensive.
-  const actualMime = mediaRecorder.mimeType || mimeType || "";
-  if (!actualMime.startsWith("video/mp4")) {
-    showToast(
-      "Cannot record video. Try using a different browser.",
-      "error",
-      6000,
-    );
-    mediaRecorder = null;
-    return;
-  }
-
   mediaRecorder.ondataavailable = (e) => {
-    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+    if (e.data?.size > 0) recordedChunks.push(e.data);
   };
 
   mediaRecorder.onstop = () => {
-    const finalMime = mediaRecorder.mimeType || "video/webm";
-    const blob = new Blob(recordedChunks, { type: finalMime });
+    const actualMime = mediaRecorder.mimeType || mimeType || "video/webm";
+    const blob = new Blob(recordedChunks, { type: actualMime });
     capturedBlob = blob;
     capturedType = "video";
     showPreview(blob, "video");
@@ -169,7 +167,7 @@ function startRecording() {
 }
 
 function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  if (mediaRecorder?.state !== "inactive") mediaRecorder.stop();
   isRecording = false;
   document.getElementById("shutter-btn").classList.remove("recording");
   document.getElementById("rec-badge").classList.remove("active");
@@ -196,9 +194,8 @@ function showPreview(blob, type) {
     img.style.display = "none";
   }
 
-  const btn = document.getElementById("save-btn");
-  btn.disabled = false;
-  btn.textContent = "Save to Album";
+  document.getElementById("save-btn").disabled = false;
+  document.getElementById("save-btn").textContent = "Save to Album";
 }
 
 function closePreview() {
@@ -210,7 +207,7 @@ function closePreview() {
   showScreen("camera-screen");
 }
 
-// ── Album navigation ──────────────────────────────────────────────────────────
+// ── Album ─────────────────────────────────────────────────────────────────────
 function openAlbum() {
   if (!albumUnlocked) {
     updateUnlockDots();
@@ -227,14 +224,14 @@ function goToCamera() {
 }
 
 // ── Upload ────────────────────────────────────────────────────────────────────
-async function saveToDrive() {
+async function uploadMedia() {
   if (!capturedBlob) return;
 
   const btn = document.getElementById("save-btn");
   btn.disabled = true;
   btn.textContent = "Uploading…";
 
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  // Derive extension from the blob's actual mimetype
   const mime =
     capturedBlob.type ||
     (capturedType === "photo" ? "image/jpeg" : "video/webm");
@@ -242,39 +239,31 @@ async function saveToDrive() {
     ? "mp4"
     : mime.includes("webm")
       ? "webm"
-      : mime.includes("jpeg") || mime.includes("jpg")
-        ? "jpg"
+      : mime.includes("quicktime")
+        ? "mov"
         : mime.includes("png")
           ? "png"
-          : capturedType === "photo"
-            ? "jpg"
-            : "webm";
+          : "jpg";
 
-  const filename =
-    FILE_NAME.replace(/[^a-zA-Z0-9]/g, "_") + "_" + ts + "." + ext;
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const filename = `${FILE_NAME}_${ts}.${ext}`;
 
   try {
     setProgress(15);
-
-    // Send as multipart/form-data — clean and efficient, no base64 overhead
     const form = new FormData();
     form.append("file", capturedBlob, filename);
 
     setProgress(30);
-
     const resp = await fetch(`${BACKEND_URL}/upload`, {
       method: "POST",
       body: form,
-      // Don't set Content-Type — browser sets it with the correct boundary
     });
-
     setProgress(90);
 
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || "Upload failed");
 
     setProgress(100);
-
     shotCount++;
     updateProgressDots();
     updateShotCounter();
@@ -346,8 +335,10 @@ function updateUnlockDots() {
     const d = document.getElementById("udot-" + i);
     if (d) d.classList.toggle("filled", i < shotCount);
   }
-  const rem = Math.max(0, UNLOCK_AT - shotCount);
-  document.getElementById("unlock-remaining").textContent = rem;
+  document.getElementById("unlock-remaining").textContent = Math.max(
+    0,
+    UNLOCK_AT - shotCount,
+  );
 }
 
 function closeUnlockOverlay() {

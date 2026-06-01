@@ -1,165 +1,239 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abie &amp; Alton's Wedding</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<!-- ════════════════════════════════════════
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Abie &amp; Alton's Wedding</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ════════════════════════════════════════
      CAMERA SCREEN
 ════════════════════════════════════════ -->
-<div id="camera-screen" class="screen">
+    <div id="camera-screen" class="screen">
+      <div id="viewfinder-wrap">
+        <video id="video" autoplay playsinline muted></video>
 
-  <div id="viewfinder-wrap">
-    <video id="video" autoplay playsinline muted></video>
+        <div class="cam-hud">
+          <div class="cam-title" id="cam-title"></div>
+          <div class="cam-counter" id="shot-counter">0 shots</div>
+        </div>
 
-    <div class="cam-hud">
-      <div class="cam-title" id="cam-title"></div>
-      <div class="cam-counter" id="shot-counter">0 shots</div>
-    </div>
+        <div class="rec-badge" id="rec-badge">
+          <div class="rec-dot"></div>
+          <div class="rec-label">REC</div>
+        </div>
 
-    <div class="rec-badge" id="rec-badge">
-      <div class="rec-dot"></div>
-      <div class="rec-label">REC</div>
-    </div>
-
-    <div class="progress-strip" id="progress-strip"></div>
-  </div>
-
-  <div class="cam-controls">
-
-    <!-- Flip camera -->
-    <button class="cam-side-btn" onclick="flipCamera()" title="Flip camera" aria-label="Flip camera">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
-        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-      </svg>
-    </button>
-
-    <!-- Shutter + mode toggle -->
-    <div class="shutter-wrap">
-      <div class="mode-toggle" role="group" aria-label="Capture mode">
-        <button class="mode-btn active" id="pill-photo" onclick="setMode('photo')" aria-pressed="true">PHOTO</button>
-        <button class="mode-btn"        id="pill-video" onclick="setMode('video')" aria-pressed="false">VIDEO</button>
+        <div class="progress-strip" id="progress-strip"></div>
       </div>
-      <button class="shutter" id="shutter-btn" onclick="handleShutter()" aria-label="Capture">
-        <div class="shutter-inner"></div>
-      </button>
+
+      <div class="cam-controls">
+        <!-- Flip camera -->
+        <button
+          class="cam-side-btn"
+          onclick="flipCamera()"
+          title="Flip camera"
+          aria-label="Flip camera"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M1 4v6h6" />
+            <path d="M23 20v-6h-6" />
+            <path
+              d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+            />
+          </svg>
+        </button>
+
+        <!-- Shutter + mode toggle -->
+        <div class="shutter-wrap">
+          <div class="mode-toggle" role="group" aria-label="Capture mode">
+            <button
+              class="mode-btn active"
+              id="pill-photo"
+              onclick="setMode('photo')"
+              aria-pressed="true"
+            >
+              PHOTO
+            </button>
+            <button
+              class="mode-btn"
+              id="pill-video"
+              onclick="setMode('video')"
+              aria-pressed="false"
+            >
+              VIDEO
+            </button>
+          </div>
+          <button
+            class="shutter"
+            id="shutter-btn"
+            onclick="handleShutter()"
+            aria-label="Capture"
+          >
+            <div class="shutter-inner"></div>
+          </button>
+        </div>
+
+        <!-- Album -->
+        <button
+          class="cam-side-btn"
+          id="album-btn"
+          onclick="openAlbum()"
+          title="View album"
+          aria-label="View album"
+        >
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+          <div class="album-lock" id="album-lock">🔒</div>
+        </button>
+      </div>
     </div>
 
-    <!-- Album -->
-    <button class="cam-side-btn" id="album-btn" onclick="openAlbum()" title="View album" aria-label="View album">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
-      </svg>
-      <div class="album-lock" id="album-lock">🔒</div>
-    </button>
-
-  </div>
-</div>
-
-
-<!-- ════════════════════════════════════════
+    <!-- ════════════════════════════════════════
      PREVIEW SCREEN
 ════════════════════════════════════════ -->
-<div id="preview-screen" class="screen">
+    <div id="preview-screen" class="screen">
+      <div class="preview-bar">
+        <div class="preview-bar-title">Review</div>
+        <button class="btn-ghost" onclick="closePreview()">Discard</button>
+      </div>
 
-  <div class="preview-bar">
-    <div class="preview-bar-title">Review</div>
-    <button class="btn-ghost" onclick="closePreview()">Discard</button>
-  </div>
+      <div id="preview-media-wrap">
+        <img id="preview-img" alt="Photo preview" style="display: none" />
+        <video id="preview-vid" controls style="display: none"></video>
+        <div class="upload-bar-wrap">
+          <div class="upload-bar" id="upload-bar"></div>
+        </div>
+      </div>
 
-  <div id="preview-media-wrap">
-    <img id="preview-img" alt="Photo preview" style="display:none" />
-    <video id="preview-vid" controls style="display:none"></video>
-    <div class="upload-bar-wrap">
-      <div class="upload-bar" id="upload-bar"></div>
+      <div class="preview-actions">
+        <button class="btn-outline" onclick="closePreview()">Retake</button>
+        <button class="btn-save" id="save-btn" onclick="uploadMedia()">
+          Save to Album
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="preview-actions">
-    <button class="btn-outline" onclick="closePreview()">Retake</button>
-    <button class="btn-save"    id="save-btn" onclick="saveToDrive()">Save to Album</button>
-  </div>
-
-</div>
-
-
-<!-- ════════════════════════════════════════
+    <!-- ════════════════════════════════════════
      ALBUM SCREEN
 ════════════════════════════════════════ -->
-<div id="album-screen" class="screen">
-
-  <div class="album-bar">
-    <div class="album-bar-title" id="album-bar-title"></div>
-    <button class="btn-camera" onclick="goToCamera()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-      Take More
-    </button>
-  </div>
-
-  <div class="album-body">
-
-    <div class="album-embed-card">
-      <div class="album-icon">📷</div>
-      <div class="album-card-title" id="album-card-title"></div>
-      <div class="album-card-sub">
-        All photos and videos are saved to a shared Google Photos album.
-        Tap below to browse everything.
+    <div id="album-screen" class="screen">
+      <div class="album-bar">
+        <div class="album-bar-title" id="album-bar-title"></div>
+        <button class="btn-camera" onclick="goToCamera()">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Take More
+        </button>
       </div>
-      <a id="open-photos-btn" class="btn-open-photos" href="#" target="_blank" rel="noopener noreferrer">
-        Open in Google Photos ↗
-      </a>
+
+      <div class="album-body">
+        <div class="album-embed-card">
+          <div class="album-icon">📷</div>
+          <div class="album-card-title" id="album-card-title"></div>
+          <div class="album-card-sub">
+            All photos and videos are saved to a shared Google Photos album. Tap
+            below to browse everything.
+          </div>
+          <a
+            id="open-photos-btn"
+            class="btn-open-photos"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in Google Photos ↗
+          </a>
+        </div>
+
+        <div class="album-stats">
+          <div class="stat-card">
+            <div class="stat-val" id="stat-shots">0</div>
+            <div class="stat-label">Your Shots</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">∞</div>
+            <div class="stat-label">Limit</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="album-stats">
-      <div class="stat-card">
-        <div class="stat-val" id="stat-shots">0</div>
-        <div class="stat-label">Your Shots</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">∞</div>
-        <div class="stat-label">Limit</div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-<!-- ════════════════════════════════════════
+    <!-- ════════════════════════════════════════
      UNLOCK OVERLAY
 ════════════════════════════════════════ -->
-<div id="unlock-overlay" role="dialog" aria-modal="true" aria-labelledby="unlock-title">
-  <div class="unlock-card">
-    <div class="unlock-icon">🎞️</div>
-    <div class="unlock-title" id="unlock-title">
-      Take <span id="unlock-needed">5</span> shots to unlock the album
+    <div
+      id="unlock-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unlock-title"
+    >
+      <div class="unlock-card">
+        <div class="unlock-icon">🎞️</div>
+        <div class="unlock-title" id="unlock-title">
+          Take <span id="unlock-needed">5</span> shots to unlock the album
+        </div>
+        <div class="unlock-sub">
+          Snap <span id="unlock-remaining">5</span> more photos or videos to
+          reveal everyone's memories.
+        </div>
+        <div class="unlock-dots" id="unlock-dots"></div>
+        <button class="unlock-dismiss" onclick="closeUnlockOverlay()">
+          Maybe later
+        </button>
+      </div>
     </div>
-    <div class="unlock-sub">
-      Snap <span id="unlock-remaining">5</span> more photos or videos to reveal everyone's memories.
-    </div>
-    <div class="unlock-dots" id="unlock-dots"></div>
-    <button class="unlock-dismiss" onclick="closeUnlockOverlay()">Maybe later</button>
-  </div>
-</div>
 
+    <!-- Utility elements -->
+    <div id="flash" aria-hidden="true"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <canvas id="canvas" aria-hidden="true"></canvas>
 
-<!-- Utility elements -->
-<div id="flash" aria-hidden="true"></div>
-<div id="toast" role="status" aria-live="polite"></div>
-<canvas id="canvas" aria-hidden="true"></canvas>
-
-<script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
