@@ -281,8 +281,8 @@ app.post("/upload", limiter, upload.single("file"), async (req, res) => {
     let uploadMime = mime;
 
     // Convert webm to mp4 — Google Photos doesn't accept webm
-    if (ext === "webm") {
-      console.log("[upload] Converting webm → mp4:", filename);
+    if (uploadMime.startsWith("video/")) {
+      console.log("[upload] Remuxing video → mp4:", filename);
       uploadBuffer = await toMp4(buffer, filename);
       uploadMime = "video/mp4";
       uploadFilename = filename.replace(/\.[^.]+$/, ".mp4");
