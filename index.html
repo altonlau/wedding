@@ -126,22 +126,17 @@
     <div id="preview-screen" class="screen">
       <div class="preview-bar">
         <div class="preview-bar-title">Review</div>
-        <button class="btn-ghost" onclick="closePreview()">Discard</button>
+        <button class="btn-ghost" onclick="discardPreview()">Discard</button>
       </div>
 
       <div id="preview-media-wrap">
         <img id="preview-img" alt="Photo preview" style="display: none" />
         <video id="preview-vid" controls style="display: none"></video>
-        <div class="upload-bar-wrap">
-          <div class="upload-bar" id="upload-bar"></div>
-        </div>
       </div>
 
       <div class="preview-actions">
-        <button class="btn-outline" onclick="closePreview()">Retake</button>
-        <button class="btn-save" id="save-btn" onclick="uploadMedia()">
-          Save to Album
-        </button>
+        <button class="btn-outline" onclick="discardPreview()">Retake</button>
+        <button class="btn-save" onclick="confirmUpload()">Upload</button>
       </div>
     </div>
 
@@ -216,10 +211,10 @@
       <div class="unlock-card">
         <div class="unlock-icon">🎞️</div>
         <div class="unlock-title" id="unlock-title">
-          Take <span id="unlock-needed">5</span> shots to unlock the album
+          Take <span id="unlock-needed">2</span> shots to unlock the album
         </div>
         <div class="unlock-sub">
-          Snap <span id="unlock-remaining">5</span> more photos or videos to
+          Snap <span id="unlock-remaining">2</span> more photos or videos to
           reveal everyone's memories.
         </div>
         <div class="unlock-dots" id="unlock-dots"></div>

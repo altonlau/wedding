@@ -6,7 +6,9 @@
 const BACKEND_URL = "https://wedding-mjvd.onrender.com";
 const EVENT_NAME = "Abie & Alton's Wedding";
 const FILE_NAME = "wedding";
-const UNLOCK_AT = 5;
+const UNLOCK_AT = 2;
+const SHOT_COUNT_KEY = "wedding-shot-count";
+const ALBUM_UNLOCKED_KEY = "wedding-album-unlocked";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let stream = null;
@@ -15,8 +17,6 @@ let currentMode = "photo";
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording = false;
-let capturedBlob = null;
-let capturedType = null;
 let shotCount = 0;
 let albumUnlocked = false;
 let albumShareUrl = "#";
@@ -24,9 +24,11 @@ let toastTimer = null;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
+  loadPersistedState();
   applyEventName();
   buildProgressDots();
   buildUnlockDots();
+  syncUnlockUI();
   showScreen("camera-screen");
   startCamera();
   fetchAlbumUrl();
@@ -59,6 +61,30 @@ function fetchAlbumUrl() {
 }
 
 // ── Camera ────────────────────────────────────────────────────────────────────
+function loadPersistedState() {
+  try {
+    const savedShotCount = parseInt(localStorage.getItem(SHOT_COUNT_KEY), 10);
+    if (Number.isFinite(savedShotCount) && savedShotCount >= 0) {
+      shotCount = savedShotCount;
+    }
+
+    albumUnlocked =
+      localStorage.getItem(ALBUM_UNLOCKED_KEY) === "true" ||
+      shotCount >= UNLOCK_AT;
+  } catch (e) {
+    console.warn("Unable to load saved state", e);
+  }
+}
+
+function persistState() {
+  try {
+    localStorage.setItem(SHOT_COUNT_KEY, String(shotCount));
+    localStorage.setItem(ALBUM_UNLOCKED_KEY, albumUnlocked ? "true" : "false");
+  } catch (e) {
+    console.warn("Unable to save state", e);
+  }
+}
+
 async function startCamera() {
   try {
     if (stream) stream.getTracks().forEach((t) => t.stop());
@@ -66,7 +92,8 @@ async function startCamera() {
       video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       audio: true,
     });
-    document.getElementById("video").srcObject = stream;
+    const video = document.getElementById("video");
+    video.srcObject = stream;
   } catch (e) {
     showToast("Camera error: " + e.message, "error", 6000);
   }
@@ -103,7 +130,9 @@ function takePhoto() {
   const canvas = document.getElementById("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
 
   const flash = document.getElementById("flash");
   flash.classList.remove("go");
@@ -112,8 +141,6 @@ function takePhoto() {
 
   canvas.toBlob(
     (blob) => {
-      capturedBlob = blob;
-      capturedType = "photo";
       showPreview(blob, "photo");
     },
     "image/jpeg",
@@ -122,7 +149,6 @@ function takePhoto() {
 }
 
 function pickMimeType() {
-  // Prefer mp4 (no server conversion needed), fall back to webm
   const candidates = [
     "video/mp4;codecs=h264,aac",
     "video/mp4",
@@ -155,8 +181,6 @@ function startRecording() {
   mediaRecorder.onstop = () => {
     const actualMime = mediaRecorder.mimeType || mimeType || "video/webm";
     const blob = new Blob(recordedChunks, { type: actualMime });
-    capturedBlob = blob;
-    capturedType = "video";
     showPreview(blob, "video");
   };
 
@@ -174,8 +198,12 @@ function stopRecording() {
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────────
+let pendingBlob = null;
+let pendingType = null;
+
 function showPreview(blob, type) {
-  document.getElementById("upload-bar").style.width = "0%";
+  pendingBlob = blob;
+  pendingType = type;
   showScreen("preview-screen");
 
   const img = document.getElementById("preview-img");
@@ -193,18 +221,40 @@ function showPreview(blob, type) {
     vid.style.display = "block";
     img.style.display = "none";
   }
-
-  document.getElementById("save-btn").disabled = false;
-  document.getElementById("save-btn").textContent = "Save to Album";
 }
 
-function closePreview() {
+function discardPreview() {
   const vid = document.getElementById("preview-vid");
   vid.pause();
   vid.src = "";
-  capturedBlob = null;
-  capturedType = null;
+  pendingBlob = null;
+  pendingType = null;
   showScreen("camera-screen");
+}
+
+function confirmUpload() {
+  if (!pendingBlob) return;
+  const blob = pendingBlob;
+  const type = pendingType;
+  pendingBlob = null;
+  pendingType = null;
+
+  // Immediately return to camera
+  const vid = document.getElementById("preview-vid");
+  vid.pause();
+  vid.src = "";
+  showScreen("camera-screen");
+
+  // Update counts now so the UI feels instant
+  shotCount++;
+  persistState();
+  updateProgressDots();
+  updateShotCounter();
+  updateUnlockDots();
+  checkUnlock();
+
+  // Fire upload in background
+  uploadMedia(blob, type);
 }
 
 // ── Album ─────────────────────────────────────────────────────────────────────
@@ -223,18 +273,9 @@ function goToCamera() {
   showScreen("camera-screen");
 }
 
-// ── Upload ────────────────────────────────────────────────────────────────────
-async function uploadMedia() {
-  if (!capturedBlob) return;
-
-  const btn = document.getElementById("save-btn");
-  btn.disabled = true;
-  btn.textContent = "Uploading…";
-
-  // Derive extension from the blob's actual mimetype
-  const mime =
-    capturedBlob.type ||
-    (capturedType === "photo" ? "image/jpeg" : "video/webm");
+// ── Upload (fire and forget — call after confirmUpload) ──────────────────────
+async function uploadMedia(blob, type) {
+  const mime = blob.type || (type === "photo" ? "image/jpeg" : "video/webm");
   const ext = mime.includes("mp4")
     ? "mp4"
     : mime.includes("webm")
@@ -248,48 +289,31 @@ async function uploadMedia() {
   const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const filename = `${FILE_NAME}_${ts}.${ext}`;
 
-  try {
-    setProgress(15);
-    const form = new FormData();
-    form.append("file", capturedBlob, filename);
+  const form = new FormData();
+  form.append("file", blob, filename);
 
-    setProgress(30);
+  showToast("Uploading…", "", 30000);
+
+  try {
     const resp = await fetch(`${BACKEND_URL}/upload`, {
       method: "POST",
       body: form,
     });
-    setProgress(90);
-
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || "Upload failed");
 
-    setProgress(100);
-    shotCount++;
-    updateProgressDots();
-    updateShotCounter();
-    checkUnlock();
+    showToast("Saved ✓", "success");
 
-    showToast("Saved to album ✓", "success");
-    btn.textContent = "Saved ✓";
-
-    setTimeout(() => {
-      closePreview();
-      if (shotCount === UNLOCK_AT) {
-        updateUnlockDots();
+    if (shotCount === UNLOCK_AT) {
+      updateUnlockDots();
+      setTimeout(() => {
         document.getElementById("unlock-overlay").classList.add("active");
-      }
-    }, 900);
+      }, 800);
+    }
   } catch (e) {
     console.error("Upload error:", e);
-    btn.disabled = false;
-    btn.textContent = "Save to Album";
-    setProgress(0);
-    showToast("Upload failed — try again", "error", 5000);
+    showToast("Upload failed — check your connection", "error", 5000);
   }
-}
-
-function setProgress(pct) {
-  document.getElementById("upload-bar").style.width = pct + "%";
 }
 
 // ── Progress dots ─────────────────────────────────────────────────────────────
@@ -314,6 +338,26 @@ function updateProgressDots() {
 function updateShotCounter() {
   document.getElementById("shot-counter").textContent =
     shotCount + " shot" + (shotCount === 1 ? "" : "s");
+}
+
+function syncUnlockUI() {
+  updateProgressDots();
+  updateShotCounter();
+  updateUnlockDots();
+
+  const lock = document.getElementById("album-lock");
+  const albumBtn = document.getElementById("album-btn");
+  if (albumUnlocked) {
+    lock.textContent = "✓";
+    lock.classList.add("unlocked");
+    albumBtn.classList.remove("locked");
+  } else {
+    lock.textContent = "🔒";
+    lock.classList.remove("unlocked");
+    albumBtn.classList.add("locked");
+  }
+
+  document.getElementById("stat-shots").textContent = shotCount;
 }
 
 // ── Unlock overlay ────────────────────────────────────────────────────────────
@@ -348,10 +392,11 @@ function closeUnlockOverlay() {
 function checkUnlock() {
   if (shotCount >= UNLOCK_AT && !albumUnlocked) {
     albumUnlocked = true;
+    persistState();
     const lock = document.getElementById("album-lock");
     lock.textContent = "✓";
     lock.classList.add("unlocked");
-    document.getElementById("album-btn").disabled = false;
+    document.getElementById("album-btn").classList.remove("locked");
     showToast("🎉 Album unlocked!", "success", 3000);
   }
 }
