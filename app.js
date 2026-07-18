@@ -169,7 +169,10 @@ function startRecording() {
   }
 
   try {
-    mediaRecorder = new MediaRecorder(stream, { mimeType });
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType,
+      videoBitsPerSecond: 2_500_000, // ~2.5 Mbps — plenty for phone video, less to convert/upload
+    });
   } catch {
     mediaRecorder = new MediaRecorder(stream);
   }

@@ -50,13 +50,14 @@ async function toMp4(buffer, filename) {
       ffmpeg(inp)
         .outputOptions([
           "-c:v libx264",
-          "-preset veryfast",
+          "-preset ultrafast",
           "-crf 26",
+          "-threads 0",
           "-c:a aac",
           "-b:a 96k",
           "-movflags +faststart",
           "-vf",
-          "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+          "scale=w='2*trunc(min(1280,iw)/2)':h=-2",
         ])
         .on("end", resolve)
         .on("error", reject)
@@ -280,8 +281,9 @@ app.post("/upload", limiter, upload.single("file"), async (req, res) => {
     let uploadFilename = filename;
     let uploadMime = mime;
 
-    // Convert webm to mp4 — Google Photos doesn't accept webm
-    if (uploadMime.startsWith("video/")) {
+    // Convert only webm — Google Photos doesn't accept it. mp4/mov/h264 upload
+    // as-is (e.g. iOS Safari records mp4), so re-encoding them just wastes time.
+    if (uploadMime === "video/webm") {
       console.log("[upload] Remuxing video → mp4:", filename);
       uploadBuffer = await toMp4(buffer, filename);
       uploadMime = "video/mp4";
