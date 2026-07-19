@@ -241,6 +241,14 @@ const limiter = rateLimit({
   message: { ok: false, error: "Too many uploads. Try again later." },
 });
 
+const mediaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Too many requests. Try again later." },
+});
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
@@ -250,6 +258,44 @@ app.get("/album", async (_req, res) => {
     res.json({ ok: true, shareUrl });
   } catch (err) {
     console.error("[GET /album]", err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/album/media", mediaLimiter, async (req, res) => {
+  try {
+    const pageSize = Math.min(
+      Math.max(parseInt(req.query.pageSize, 10) || 50, 1),
+      100,
+    );
+    const pageToken = req.query.pageToken || undefined;
+
+    const token = await getToken();
+    const { albumId } = await getAlbumInfo();
+
+    const { status, data } = await photosPost(
+      token,
+      `${PHOTOS_BASE}/mediaItems:search`,
+      { albumId, pageSize, ...(pageToken && { pageToken }) },
+    );
+    if (status !== 200) {
+      throw new Error(
+        `mediaItems:search failed (${status}): ${JSON.stringify(data.error || data)}`,
+      );
+    }
+
+    const items = (data.mediaItems || []).map((m) => ({
+      id: m.id,
+      baseUrl: m.baseUrl,
+      mimeType: m.mimeType,
+      isVideo: !!m.mediaMetadata?.video || !!m.mimeType?.startsWith("video/"),
+      width: Number(m.mediaMetadata?.width) || null,
+      height: Number(m.mediaMetadata?.height) || null,
+    }));
+
+    res.json({ ok: true, items, nextPageToken: data.nextPageToken || null });
+  } catch (err) {
+    console.error("[GET /album/media]", err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
