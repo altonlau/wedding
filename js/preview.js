@@ -2,14 +2,9 @@
    Preview — review a capture, then discard or upload
 ───────────────────────────────────────────────────────────────────────────── */
 
-import { state, persistState } from "./state.js";
+import { updateShotCounter } from "./album.js";
 import { showScreen } from "./screens.js";
-import {
-  updateProgressDots,
-  updateShotCounter,
-  updateUnlockDots,
-  checkUnlock,
-} from "./album.js";
+import { persistState, state } from "./state.js";
 import { uploadMedia } from "./upload.js";
 
 let pendingBlob = null;
@@ -62,10 +57,7 @@ export function confirmUpload() {
   // Update counts now so the UI feels instant
   state.shotCount++;
   persistState();
-  updateProgressDots();
   updateShotCounter();
-  updateUnlockDots();
-  checkUnlock();
 
   // Fire upload in background
   uploadMedia(blob, type);

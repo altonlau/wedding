@@ -2,29 +2,19 @@
    DISPOSABLE CAMERA — entry point: boot sequence + event wiring
 ───────────────────────────────────────────────────────────────────────────── */
 
-import { loadPersistedState } from "./state.js";
-import { applyEventName } from "./screens.js";
-import { showScreen } from "./screens.js";
-import { startCamera, flipCamera, setMode } from "./camera.js";
+import { goToCamera, openAlbum, syncShotUI } from "./album.js";
+import { flipCamera, setMode, startCamera } from "./camera.js";
 import { handleShutter } from "./capture.js";
-import { discardPreview, confirmUpload } from "./preview.js";
+import { confirmUpload, discardPreview } from "./preview.js";
+import { applyEventName, showScreen } from "./screens.js";
+import { loadPersistedState } from "./state.js";
 import { fetchAlbumUrl } from "./upload.js";
-import {
-  openAlbum,
-  goToCamera,
-  buildProgressDots,
-  buildUnlockDots,
-  syncUnlockUI,
-  closeUnlockOverlay,
-} from "./album.js";
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
   loadPersistedState();
   applyEventName();
-  buildProgressDots();
-  buildUnlockDots();
-  syncUnlockUI();
+  syncShotUI();
   showScreen("camera-screen");
   startCamera();
   fetchAlbumUrl();
@@ -46,5 +36,4 @@ function wireEvents() {
   on("retake-btn", "click", discardPreview);
   on("upload-btn", "click", confirmUpload);
   on("take-more-btn", "click", goToCamera);
-  on("unlock-dismiss-btn", "click", closeUnlockOverlay);
 }

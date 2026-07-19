@@ -2,9 +2,9 @@
    Capture — shutter, photo snapshot, video recording
 ───────────────────────────────────────────────────────────────────────────── */
 
+import { showPreview } from "./preview.js";
 import { state } from "./state.js";
 import { showToast } from "./toast.js";
-import { showPreview } from "./preview.js";
 
 let mediaRecorder = null;
 let recordedChunks = [];

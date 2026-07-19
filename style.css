@@ -161,39 +161,6 @@ body {
   }
 }
 
-/* Progress dots (album unlock) */
-.progress-strip {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  z-index: 10;
-}
-
-.p-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
-  background: transparent;
-  transition:
-    background 0.3s,
-    transform 0.2s;
-}
-.p-dot.filled {
-  background: var(--white);
-  transform: scale(1.15);
-}
-.p-dot.locked {
-  border-color: var(--sky-lt);
-}
-.p-dot.locked.filled {
-  background: var(--sky);
-  border-color: var(--sky);
-}
-
 /* Controls bar */
 .cam-controls {
   background: var(--white);
@@ -299,30 +266,6 @@ body {
   opacity: 0.35;
   cursor: not-allowed;
 }
-.cam-side-btn.locked {
-  opacity: 0.55;
-}
-
-/* Lock badge on album button */
-.album-lock {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 18px;
-  height: 18px;
-  background: var(--stone);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.6rem;
-  border: 1.5px solid var(--white);
-}
-.album-lock.unlocked {
-  background: var(--sky);
-  color: white;
-}
-
 /* ════════════════════════════════════════════════════════════════════════════
    PREVIEW SCREEN
 ════════════════════════════════════════════════════════════════════════════ */
@@ -555,94 +498,6 @@ body {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   UNLOCK OVERLAY
-════════════════════════════════════════════════════════════════════════════ */
-
-#unlock-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(155, 196, 226, 0.18);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 800;
-  padding: 2rem;
-}
-#unlock-overlay.active {
-  display: flex;
-}
-
-.unlock-card {
-  background: var(--white);
-  border-radius: 20px;
-  padding: 36px 28px 28px;
-  width: 100%;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
-}
-
-.unlock-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--sky-lt);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  margin-bottom: 4px;
-}
-
-.unlock-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.unlock-sub {
-  font-size: 0.8rem;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.unlock-dots {
-  display: flex;
-  gap: 8px;
-  margin: 6px 0;
-}
-
-.u-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--stone);
-  transition:
-    background 0.3s,
-    transform 0.2s;
-}
-.u-dot.filled {
-  background: var(--sky);
-  transform: scale(1.2);
-}
-
-.unlock-dismiss {
-  font-size: 0.72rem;
-  color: var(--muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  font-family: "Inter", sans-serif;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

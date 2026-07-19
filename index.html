@@ -31,8 +31,6 @@
           <div class="rec-dot"></div>
           <div class="rec-label">REC</div>
         </div>
-
-        <div class="progress-strip" id="progress-strip"></div>
       </div>
 
       <div class="cam-controls">
@@ -65,26 +63,14 @@
         <!-- Shutter + mode toggle -->
         <div class="shutter-wrap">
           <div class="mode-toggle" role="group" aria-label="Capture mode">
-            <button
-              class="mode-btn active"
-              id="pill-photo"
-              aria-pressed="true"
-            >
+            <button class="mode-btn active" id="pill-photo" aria-pressed="true">
               PHOTO
             </button>
-            <button
-              class="mode-btn"
-              id="pill-video"
-              aria-pressed="false"
-            >
+            <button class="mode-btn" id="pill-video" aria-pressed="false">
               VIDEO
             </button>
           </div>
-          <button
-            class="shutter"
-            id="shutter-btn"
-            aria-label="Capture"
-          >
+          <button class="shutter" id="shutter-btn" aria-label="Capture">
             <div class="shutter-inner"></div>
           </button>
         </div>
@@ -111,7 +97,6 @@
             <circle cx="8.5" cy="8.5" r="1.5" />
             <polyline points="21 15 16 10 5 21" />
           </svg>
-          <div class="album-lock" id="album-lock">🔒</div>
         </button>
       </div>
     </div>
@@ -192,31 +177,6 @@
             <div class="stat-label">Limit</div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════════
-     UNLOCK OVERLAY
-════════════════════════════════════════ -->
-    <div
-      id="unlock-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="unlock-title"
-    >
-      <div class="unlock-card">
-        <div class="unlock-icon">🎞️</div>
-        <div class="unlock-title" id="unlock-title">
-          Take <span id="unlock-needed">2</span> shots to unlock the album
-        </div>
-        <div class="unlock-sub">
-          Snap <span id="unlock-remaining">2</span> more photos or videos to
-          reveal everyone's memories.
-        </div>
-        <div class="unlock-dots" id="unlock-dots"></div>
-        <button class="unlock-dismiss" id="unlock-dismiss-btn">
-          Maybe later
-        </button>
       </div>
     </div>
 
