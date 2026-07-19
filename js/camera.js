@@ -7,6 +7,14 @@ import { showToast } from "./toast.js";
 
 let facingMode = "environment";
 
+// Mirror the live preview for the front camera so it behaves like a mirror.
+// Captured photos/videos come from the raw (un-mirrored) stream.
+function updateMirror() {
+  document
+    .getElementById("video")
+    .classList.toggle("mirrored", facingMode === "user");
+}
+
 export async function startCamera() {
   try {
     if (state.stream) state.stream.getTracks().forEach((t) => t.stop());
@@ -16,6 +24,7 @@ export async function startCamera() {
     });
     const video = document.getElementById("video");
     video.srcObject = state.stream;
+    updateMirror();
   } catch (e) {
     showToast("Camera error: " + e.message, "error", 6000);
   }
@@ -34,6 +43,7 @@ export async function flipCamera() {
   if (oldTrack) {
     try {
       await oldTrack.applyConstraints({ facingMode: { exact: facingMode } });
+      updateMirror();
       return;
     } catch {
       /* browser can't switch in place — fall through to track swap */
@@ -52,6 +62,7 @@ export async function flipCamera() {
     });
     state.stream.addTrack(camStream.getVideoTracks()[0]);
     document.getElementById("video").srcObject = state.stream;
+    updateMirror();
   } catch (e) {
     showToast("Camera error: " + e.message, "error", 6000);
   }

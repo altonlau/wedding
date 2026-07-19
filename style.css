@@ -82,6 +82,11 @@ body {
   display: block;
 }
 
+/* Selfie preview is mirrored; captures stay un-mirrored (raw stream) */
+#video.mirrored {
+  transform: scaleX(-1);
+}
+
 /* Vignette overlay */
 #viewfinder-wrap::after {
   content: "";
