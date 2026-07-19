@@ -13,5 +13,4 @@ export function showScreen(id) {
 export function applyEventName() {
   document.getElementById("cam-title").textContent = EVENT_NAME;
   document.getElementById("album-bar-title").textContent = EVENT_NAME;
-  document.getElementById("album-card-title").textContent = EVENT_NAME;
 }

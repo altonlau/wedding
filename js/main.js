@@ -5,6 +5,7 @@
 import { goToCamera, openAlbum, syncShotUI } from "./album.js";
 import { flipCamera, setMode, startCamera } from "./camera.js";
 import { handleShutter } from "./capture.js";
+import { initGallery } from "./gallery.js";
 import { confirmUpload, discardPreview } from "./preview.js";
 import { applyEventName, showScreen } from "./screens.js";
 import { loadPersistedState } from "./state.js";
@@ -18,6 +19,7 @@ window.addEventListener("DOMContentLoaded", () => {
   showScreen("camera-screen");
   startCamera();
   fetchAlbumUrl();
+  initGallery();
 
   wireEvents();
 });

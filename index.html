@@ -149,23 +149,19 @@
       </div>
 
       <div class="album-body">
-        <div class="album-embed-card">
+        <div id="gallery-empty" class="album-embed-card" hidden>
           <div class="album-icon">📷</div>
-          <div class="album-card-title" id="album-card-title"></div>
-          <div class="album-card-sub">
-            All photos and videos are saved to a shared Google Photos album. Tap
-            below to browse everything.
-          </div>
-          <a
-            id="open-photos-btn"
-            class="btn-open-photos"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in Google Photos ↗
-          </a>
+          <div class="album-card-title">No photos yet</div>
+          <div class="album-card-sub">Be the first — take a shot!</div>
         </div>
+
+        <div id="gallery-grid" class="gallery-grid"></div>
+
+        <div id="gallery-status" class="gallery-status" hidden>
+          <div class="spinner"></div>
+          <div id="gallery-status-text" class="gallery-status-text"></div>
+        </div>
+        <div id="gallery-sentinel" aria-hidden="true"></div>
 
         <div class="album-stats">
           <div class="stat-card">
@@ -177,6 +173,16 @@
             <div class="stat-label">Limit</div>
           </div>
         </div>
+
+        <a
+          id="open-photos-btn"
+          class="album-footer-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open in Google Photos ↗
+        </a>
       </div>
     </div>
 

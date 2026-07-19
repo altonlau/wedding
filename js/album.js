@@ -2,6 +2,7 @@
    Album — shot counter and album screen navigation
 ───────────────────────────────────────────────────────────────────────────── */
 
+import { refreshGallery } from "./gallery.js";
 import { showScreen } from "./screens.js";
 import { state } from "./state.js";
 
@@ -10,6 +11,7 @@ export function openAlbum() {
   document.getElementById("stat-shots").textContent = state.shotCount;
   document.getElementById("open-photos-btn").href = state.albumShareUrl;
   showScreen("album-screen");
+  refreshGallery();
 }
 
 export function goToCamera() {
