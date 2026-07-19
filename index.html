@@ -39,7 +39,7 @@
         <!-- Flip camera -->
         <button
           class="cam-side-btn"
-          onclick="flipCamera()"
+          id="flip-btn"
           title="Flip camera"
           aria-label="Flip camera"
         >
@@ -68,7 +68,6 @@
             <button
               class="mode-btn active"
               id="pill-photo"
-              onclick="setMode('photo')"
               aria-pressed="true"
             >
               PHOTO
@@ -76,7 +75,6 @@
             <button
               class="mode-btn"
               id="pill-video"
-              onclick="setMode('video')"
               aria-pressed="false"
             >
               VIDEO
@@ -85,7 +83,6 @@
           <button
             class="shutter"
             id="shutter-btn"
-            onclick="handleShutter()"
             aria-label="Capture"
           >
             <div class="shutter-inner"></div>
@@ -96,7 +93,6 @@
         <button
           class="cam-side-btn"
           id="album-btn"
-          onclick="openAlbum()"
           title="View album"
           aria-label="View album"
         >
@@ -126,7 +122,7 @@
     <div id="preview-screen" class="screen">
       <div class="preview-bar">
         <div class="preview-bar-title">Review</div>
-        <button class="btn-ghost" onclick="discardPreview()">Discard</button>
+        <button class="btn-ghost" id="discard-btn">Discard</button>
       </div>
 
       <div id="preview-media-wrap">
@@ -135,8 +131,8 @@
       </div>
 
       <div class="preview-actions">
-        <button class="btn-outline" onclick="discardPreview()">Retake</button>
-        <button class="btn-save" onclick="confirmUpload()">Upload</button>
+        <button class="btn-outline" id="retake-btn">Retake</button>
+        <button class="btn-save" id="upload-btn">Upload</button>
       </div>
     </div>
 
@@ -146,7 +142,7 @@
     <div id="album-screen" class="screen">
       <div class="album-bar">
         <div class="album-bar-title" id="album-bar-title"></div>
-        <button class="btn-camera" onclick="goToCamera()">
+        <button class="btn-camera" id="take-more-btn">
           <svg
             width="14"
             height="14"
@@ -218,7 +214,7 @@
           reveal everyone's memories.
         </div>
         <div class="unlock-dots" id="unlock-dots"></div>
-        <button class="unlock-dismiss" onclick="closeUnlockOverlay()">
+        <button class="unlock-dismiss" id="unlock-dismiss-btn">
           Maybe later
         </button>
       </div>
@@ -229,6 +225,6 @@
     <div id="toast" role="status" aria-live="polite"></div>
     <canvas id="canvas" aria-hidden="true"></canvas>
 
-    <script src="app.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>
