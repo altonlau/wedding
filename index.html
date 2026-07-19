@@ -189,6 +189,31 @@
     <!-- Utility elements -->
     <div id="flash" aria-hidden="true"></div>
     <div id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Media viewer">
+      <button id="lightbox-close" class="lightbox-btn" aria-label="Close">
+        ✕
+      </button>
+      <button
+        id="lightbox-prev"
+        class="lightbox-btn lightbox-nav lightbox-nav-prev"
+        aria-label="Previous"
+      >
+        ‹
+      </button>
+      <button
+        id="lightbox-next"
+        class="lightbox-btn lightbox-nav lightbox-nav-next"
+        aria-label="Next"
+      >
+        ›
+      </button>
+      <div id="lightbox-stage">
+        <img id="lightbox-img" alt="" hidden />
+        <video id="lightbox-vid" controls playsinline hidden></video>
+      </div>
+    </div>
     <canvas id="canvas" aria-hidden="true"></canvas>
 
     <script type="module" src="js/main.js"></script>

@@ -3,6 +3,7 @@
 ───────────────────────────────────────────────────────────────────────────── */
 
 import { BACKEND_URL } from "./config.js";
+import { openLightbox } from "./lightbox.js";
 import { showToast } from "./toast.js";
 
 const PAGE_SIZE = 50;
@@ -109,6 +110,8 @@ function buildCell(item, index) {
     badge.className = "gallery-play-badge";
     btn.appendChild(badge);
   }
+
+  btn.addEventListener("click", () => openLightbox(items, index));
 
   return btn;
 }
