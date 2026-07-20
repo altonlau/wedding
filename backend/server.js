@@ -116,19 +116,22 @@ async function getOrCreateAlbum(token) {
   return data;
 }
 
-async function shareAlbum(token, albumId) {
+async function shareAlbum(token, album) {
+  // Already shared — the album we fetched/created carries the URL
+  if (album.shareInfo?.shareableUrl) return album.shareInfo.shareableUrl;
+
   const { data } = await photosPost(
     token,
-    `${PHOTOS_BASE}/albums/${albumId}:share`,
+    `${PHOTOS_BASE}/albums/${album.id}:share`,
     {
       sharedAlbumOptions: { isCollaborative: false, isCommentable: false },
     },
   );
   if (data.shareInfo?.shareableUrl) return data.shareInfo.shareableUrl;
 
-  // Already shared — fetch the album to get the URL
-  const album = await photosGet(token, `${PHOTOS_BASE}/albums/${albumId}`);
-  return album.shareInfo?.shareableUrl || "https://photos.google.com";
+  // Share call rejected (e.g. already shared) — re-fetch for the URL
+  const fresh = await photosGet(token, `${PHOTOS_BASE}/albums/${album.id}`);
+  return fresh.shareInfo?.shareableUrl || null;
 }
 
 async function uploadToPhotos(token, buffer, mimeType, filename, albumId) {
@@ -211,7 +214,9 @@ async function getAlbumInfo() {
   if (cache) return cache;
   const token = await getToken();
   const album = await getOrCreateAlbum(token);
-  const shareUrl = await shareAlbum(token, album.id);
+  // Prefer the shareable (join) link; fall back to the album's direct
+  // productUrl so the button always lands on the album itself.
+  const shareUrl = (await shareAlbum(token, album)) || album.productUrl;
   cache = { albumId: album.id, shareUrl };
   return cache;
 }
@@ -262,29 +267,55 @@ app.get("/album", async (_req, res) => {
   }
 });
 
-app.get("/album/media", mediaLimiter, async (req, res) => {
-  try {
-    const pageSize = Math.min(
-      Math.max(parseInt(req.query.pageSize, 10) || 50, 1),
-      100,
-    );
-    const pageToken = req.query.pageToken || undefined;
+// mediaItems:search returns album items oldest-first and can't sort when
+// filtering by albumId (orderBy only pairs with date filters), so newest-first
+// means fetching the whole album, reversing, and paginating with offset tokens.
+// The reversed list is cached briefly so scroll pagination stays cheap and
+// offsets stay consistent within a session.
+let mediaCache = { items: null, fetchedAt: 0 };
+const MEDIA_CACHE_MS = 30 * 1000;
 
-    const token = await getToken();
-    const { albumId } = await getAlbumInfo();
+async function getAlbumMediaNewestFirst(isFirstPage) {
+  const cacheFresh = Date.now() - mediaCache.fetchedAt < MEDIA_CACHE_MS;
+  if (mediaCache.items && (cacheFresh || !isFirstPage)) return mediaCache.items;
 
+  const token = await getToken();
+  const { albumId } = await getAlbumInfo();
+
+  const all = [];
+  let pageToken;
+  do {
     const { status, data } = await photosPost(
       token,
       `${PHOTOS_BASE}/mediaItems:search`,
-      { albumId, pageSize, ...(pageToken && { pageToken }) },
+      { albumId, pageSize: 100, ...(pageToken && { pageToken }) },
     );
     if (status !== 200) {
       throw new Error(
         `mediaItems:search failed (${status}): ${JSON.stringify(data.error || data)}`,
       );
     }
+    all.push(...(data.mediaItems || []));
+    pageToken = data.nextPageToken;
+  } while (pageToken);
 
-    const items = (data.mediaItems || []).map((m) => ({
+  all.reverse();
+  mediaCache = { items: all, fetchedAt: Date.now() };
+  return all;
+}
+
+app.get("/album/media", mediaLimiter, async (req, res) => {
+  try {
+    const pageSize = Math.min(
+      Math.max(parseInt(req.query.pageSize, 10) || 50, 1),
+      100,
+    );
+    const offset = Math.max(parseInt(req.query.pageToken, 10) || 0, 0);
+
+    const all = await getAlbumMediaNewestFirst(offset === 0);
+    const slice = all.slice(offset, offset + pageSize);
+
+    const items = slice.map((m) => ({
       id: m.id,
       baseUrl: m.baseUrl,
       mimeType: m.mimeType,
@@ -293,7 +324,12 @@ app.get("/album/media", mediaLimiter, async (req, res) => {
       height: Number(m.mediaMetadata?.height) || null,
     }));
 
-    res.json({ ok: true, items, nextPageToken: data.nextPageToken || null });
+    const nextOffset = offset + slice.length;
+    res.json({
+      ok: true,
+      items,
+      nextPageToken: nextOffset < all.length ? String(nextOffset) : null,
+    });
   } catch (err) {
     console.error("[GET /album/media]", err.message);
     res.status(500).json({ ok: false, error: err.message });
@@ -346,6 +382,7 @@ app.post("/upload", limiter, upload.single("file"), async (req, res) => {
       albumId,
     );
 
+    mediaCache = { items: null, fetchedAt: 0 };
     res.json({ ok: true, mediaId: mediaItem?.id, filename: uploadFilename });
   } catch (err) {
     console.error("[POST /upload]", err.message);

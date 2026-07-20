@@ -8,11 +8,15 @@ import { showToast } from "./toast.js";
 let facingMode = "environment";
 
 // Mirror the live preview for the front camera so it behaves like a mirror.
-// Captured photos/videos come from the raw (un-mirrored) stream.
+// Captured photos/videos come from the raw (un-mirrored) stream. The track's
+// own settings say which camera the browser actually picked; fall back to the
+// requested facingMode when the device doesn't report one (common on desktop).
 function updateMirror() {
+  const track = state.stream?.getVideoTracks()[0];
+  const actual = track?.getSettings().facingMode ?? facingMode;
   document
     .getElementById("video")
-    .classList.toggle("mirrored", facingMode === "user");
+    .classList.toggle("mirrored", actual === "user");
 }
 
 export async function startCamera() {

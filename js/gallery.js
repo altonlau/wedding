@@ -11,6 +11,7 @@ const STALE_MS = 45 * 60 * 1000; // Google Photos baseUrls expire after ~60 min
 const WAKING_MS = 8000; // Render free tier cold start can take 30-60s
 
 const items = []; // kept as one live array — cleared in place on reset
+const seenIds = new Set(); // guards against duplicates across page fetches
 let nextPageToken = null;
 let loading = false;
 let done = false;
@@ -29,21 +30,88 @@ export function initGallery() {
     { root: document.querySelector(".album-body"), rootMargin: "600px 0px" },
   );
   observer.observe(el("gallery-sentinel"));
+  initPullToRefresh();
 }
 
-export function refreshGallery() {
-  if (items.length > 0 && Date.now() - lastLoadedAt < STALE_MS) return;
+export function refreshGallery(force = false) {
+  if (!force && items.length > 0 && Date.now() - lastLoadedAt < STALE_MS) {
+    return Promise.resolve();
+  }
   resetGallery();
-  loadNextPage();
+  return loadNextPage();
 }
 
 function resetGallery() {
   items.length = 0;
+  seenIds.clear();
   nextPageToken = null;
   done = false;
   el("gallery-grid").innerHTML = "";
   el("gallery-empty").hidden = true;
   document.querySelector(".album-body").scrollTop = 0;
+}
+
+// ── Pull to refresh ─────────────────────────────────────────────────────────
+function initPullToRefresh() {
+  const body = document.querySelector(".album-body");
+  const ptr = el("gallery-ptr");
+  const THRESHOLD = 64; // px of (damped) pull needed to trigger a refresh
+  const MAX_PULL = 90;
+  let startY = 0;
+  let pulling = false;
+  let refreshing = false;
+  let dist = 0;
+
+  const setPull = (px) => {
+    ptr.style.setProperty("--pull", px);
+  };
+
+  body.addEventListener(
+    "touchstart",
+    (e) => {
+      if (refreshing || body.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+      pulling = true;
+      dist = 0;
+      ptr.classList.remove("settle");
+    },
+    { passive: true },
+  );
+
+  body.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!pulling || refreshing) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy <= 0 || body.scrollTop > 0) {
+        dist = 0;
+        setPull(0);
+        return;
+      }
+      dist = Math.min(dy * 0.5, MAX_PULL);
+      setPull(dist);
+    },
+    { passive: true },
+  );
+
+  const onRelease = async () => {
+    if (!pulling) return;
+    pulling = false;
+    ptr.classList.add("settle");
+    if (dist >= THRESHOLD && !refreshing) {
+      refreshing = true;
+      setPull(THRESHOLD);
+      try {
+        await refreshGallery(true);
+      } finally {
+        refreshing = false;
+      }
+    }
+    dist = 0;
+    setPull(0);
+  };
+  body.addEventListener("touchend", onRelease);
+  body.addEventListener("touchcancel", onRelease);
 }
 
 // ── Paging ──────────────────────────────────────────────────────────────────
@@ -61,8 +129,10 @@ async function loadNextPage() {
     if (!d.ok) throw new Error(d.error || "Failed to load album");
 
     lastLoadedAt = Date.now();
-    appendItems(d.items);
-    items.push(...d.items);
+    const fresh = d.items.filter((it) => !seenIds.has(it.id));
+    fresh.forEach((it) => seenIds.add(it.id));
+    appendItems(fresh);
+    items.push(...fresh);
     nextPageToken = d.nextPageToken;
     done = !nextPageToken;
     el("gallery-empty").hidden = !(done && items.length === 0);
