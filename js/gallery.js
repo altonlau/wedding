@@ -66,33 +66,25 @@ function initPullToRefresh() {
     ptr.style.setProperty("--pull", px);
   };
 
-  body.addEventListener(
-    "touchstart",
-    (e) => {
-      if (refreshing || body.scrollTop > 0) return;
-      startY = e.touches[0].clientY;
-      pulling = true;
-      dist = 0;
-      ptr.classList.remove("settle");
-    },
-    { passive: true },
-  );
+  const onStart = (y) => {
+    if (refreshing || body.scrollTop > 0) return;
+    startY = y;
+    pulling = true;
+    dist = 0;
+    ptr.classList.remove("settle");
+  };
 
-  body.addEventListener(
-    "touchmove",
-    (e) => {
-      if (!pulling || refreshing) return;
-      const dy = e.touches[0].clientY - startY;
-      if (dy <= 0 || body.scrollTop > 0) {
-        dist = 0;
-        setPull(0);
-        return;
-      }
-      dist = Math.min(dy * 0.5, MAX_PULL);
-      setPull(dist);
-    },
-    { passive: true },
-  );
+  const onMove = (y) => {
+    if (!pulling || refreshing) return;
+    const dy = y - startY;
+    if (dy <= 0 || body.scrollTop > 0) {
+      dist = 0;
+      setPull(0);
+      return;
+    }
+    dist = Math.min(dy * 0.5, MAX_PULL);
+    setPull(dist);
+  };
 
   const onRelease = async () => {
     if (!pulling) return;
@@ -110,8 +102,26 @@ function initPullToRefresh() {
     dist = 0;
     setPull(0);
   };
+
+  body.addEventListener(
+    "touchstart",
+    (e) => onStart(e.touches[0].clientY),
+    { passive: true },
+  );
+  body.addEventListener(
+    "touchmove",
+    (e) => onMove(e.touches[0].clientY),
+    { passive: true },
+  );
   body.addEventListener("touchend", onRelease);
   body.addEventListener("touchcancel", onRelease);
+
+  // Mouse fallback so the gesture also works when testing on desktop
+  body.addEventListener("mousedown", (e) => onStart(e.clientY));
+  window.addEventListener("mousemove", (e) => {
+    if (pulling) onMove(e.clientY);
+  });
+  window.addEventListener("mouseup", onRelease);
 }
 
 // ── Paging ──────────────────────────────────────────────────────────────────
@@ -171,6 +181,7 @@ function buildCell(item, index) {
   const img = document.createElement("img");
   img.loading = "lazy";
   img.decoding = "async";
+  img.draggable = false; // native image drag would swallow the mouse pull gesture
   img.alt = item.isVideo ? "Video" : "Photo";
   img.src = `${item.baseUrl}=w400-h400-c`;
   btn.appendChild(img);
