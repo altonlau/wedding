@@ -9,7 +9,6 @@ import { state } from "./state.js";
 // ── Album screen navigation ─────────────────────────────────────────────────
 export function openAlbum() {
   document.getElementById("stat-shots").textContent = state.shotCount;
-  document.getElementById("open-photos-btn").href = state.albumShareUrl;
   showScreen("album-screen");
   refreshGallery();
 }

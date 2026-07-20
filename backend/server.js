@@ -257,16 +257,6 @@ const mediaLimiter = rateLimit({
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-app.get("/album", async (_req, res) => {
-  try {
-    const { shareUrl } = await getAlbumInfo();
-    res.json({ ok: true, shareUrl });
-  } catch (err) {
-    console.error("[GET /album]", err.message);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
 // mediaItems:search returns album items oldest-first and can't sort when
 // filtering by albumId (orderBy only pairs with date filters), so newest-first
 // means fetching the whole album, reversing, and paginating with offset tokens.

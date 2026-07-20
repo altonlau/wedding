@@ -1,22 +1,9 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   Upload — album URL fetch + fire-and-forget media upload
+   Upload — fire-and-forget media upload
 ───────────────────────────────────────────────────────────────────────────── */
 
 import { BACKEND_URL, FILE_NAME } from "./config.js";
-import { state } from "./state.js";
 import { showToast } from "./toast.js";
-
-export function fetchAlbumUrl() {
-  fetch(`${BACKEND_URL}/album`)
-    .then((r) => r.json())
-    .then((d) => {
-      if (d.ok && d.shareUrl) {
-        state.albumShareUrl = d.shareUrl;
-        document.getElementById("open-photos-btn").href = state.albumShareUrl;
-      }
-    })
-    .catch(() => {});
-}
 
 export async function uploadMedia(blob, type) {
   const mime = blob.type || (type === "photo" ? "image/jpeg" : "video/webm");

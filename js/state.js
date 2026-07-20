@@ -13,7 +13,6 @@ export const state = {
   currentMode: "photo",
   isRecording: false,
   shotCount: 0,
-  albumShareUrl: "#",
 };
 
 export function loadPersistedState() {

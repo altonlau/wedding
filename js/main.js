@@ -10,7 +10,6 @@ import { initLightbox } from "./lightbox.js";
 import { confirmUpload, discardPreview } from "./preview.js";
 import { applyEventName, showScreen } from "./screens.js";
 import { loadPersistedState } from "./state.js";
-import { fetchAlbumUrl } from "./upload.js";
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
@@ -19,7 +18,6 @@ window.addEventListener("DOMContentLoaded", () => {
   syncShotUI();
   showScreen("camera-screen");
   startCamera();
-  fetchAlbumUrl();
   initGallery();
   initLightbox();
 
